@@ -54,10 +54,11 @@ function mesos_master() {
 zookeeper:
   image: $IMAGE_ZOOKEEPER
   restart: always
-  ports:
-   - "$HOST_IP:2181:2181"
-   - "$HOST_IP:2888:2888"
-   - "$HOST_IP:3888:3888"
+  net: host
+  # ports:
+  #  - "$HOST_IP:2181:2181"
+  #  - "$HOST_IP:2888:2888"
+  #  - "$HOST_IP:3888:3888"
   volumes:
    - ./zookeeper/conf:/opt/zookeeper/conf
    - ./zookeeper/data:/tmp/zookeeper
@@ -76,11 +77,15 @@ mesosmaster:
 
 marathon:
   image: $IMAGE_MARATHON
-  command: --master "$MESOS_ZK" --zk "$MARATHON_ZK"
-  # if net: host, --http_address "$HOST_IP"
   restart: always
-  ports:
-   - "$HOST_IP:8080:8080"
+  net: host
+  # ports:
+  #  - "$HOST_IP:8080:8080"
+  environment:
+   - "MARATHON_MASTER=$MESOS_ZK"
+   - "MARATHON_ZK=$MARATHON_ZK"
+   - "MARATHON_HTTP_ADDRESS=$HOST_IP"
+   - "MARATHON_HOSTNAME=$HOST_IP"
 EOF
 	echo "docker-compose.yml saved."
 
@@ -98,10 +103,10 @@ EOF
 tickTime=2000
 dataDir=/tmp/zookeeper/
 clientPort=2181
+clientPortAddress=$HOST_IP
 initLimit=5
 syncLimit=2
 EOF
-    #clientPortAddress=$HOST_IP
 
 	INDEX=1
 	for SERVER in $MASTERS; do
