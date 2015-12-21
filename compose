@@ -1,0 +1,108 @@
+#!/bin/bash
+test -f config && . "./config"
+set -e
+
+function mesos_master() {
+
+	if [ "_$INTERFACE" = "_" ]; then echo "missing env: INTERFACE"; exit 1; fi
+	if [ "_$MASTERS" = "_" ]; then echo "missing env: MASTERS"; exit 1; fi
+	if [ "_$QUORUM" = "_" ]; then echo "missing env: QUORUM"; exit 1; fi
+
+	# Create the list of zookeeper host:port configs
+	for i in $MASTERS; do
+		if [ "_${ZK}" != "_" ]; then
+			ZK="${ZK},"
+		fi
+		ZK="${ZK}${i}:2181"
+	done
+
+	# Find the public IP for the selected network interface
+	HOST_IP=`ifconfig $INTERFACE | grep "inet addr" | awk -F: '{print $2}' | awk '{print $1}'`
+	if [ "_$HOST_IP" = "_" ]; then
+		HOST_IP=`ifconfig $INTERFACE | grep "inet " | awk '{print $2}'`
+	fi
+
+	if [ "_$MYID" = "_" ]; then
+		MYID="`echo $HOST_IP|cut -d. -f4`"
+	fi
+
+	# Build zookeeper urls for mesos and marathon
+	MESOS_ZK="zk://$ZK/mesos"
+	MARATHON_ZK="zk://$ZK/marathon"
+
+	export INTERFACE
+	export MASTERS
+	export QUORUM
+	export HOST_IP
+	export MESOS_ZK
+	export MARATHON_ZK
+	export MYID
+
+	echo "INTERFACE=$INTERFACE"
+	echo "QUORUM=$QUORUM"
+	echo "MASTERS=$MASTERS"
+	echo "HOST_IP=$HOST_IP"
+	echo "MESOS_ZK=$MESOS_ZK"
+	echo "MARATHON_ZK=$MARATHON_ZK"
+	echo "MYID=$MYID"
+
+	cat << EOF | envsubst > docker-compose.yml
+zookeeper:
+  image: jplock/zookeeper:3.4.7
+  restart: always
+  net: host
+  ports:
+   - "$HOST_IP:2181:2181"
+   - "$HOST_IP:2888:2888"
+   - "$HOST_IP:3888:3888"
+  volumes:
+   - ./zookeeper/conf:/opt/zookeeper/conf
+   - ./zookeeper/data:/tmp/zookeeper
+
+mesosmaster:
+  image: mesosphere/mesos-master:0.26.0-0.2.145.ubuntu1404
+  restart: always
+  net: host
+  ports:
+   - "$HOST_IP:5050:5050"
+  environment:
+   - "MESOS_ZK=$MESOS_ZK"
+   - "MESOS_QUORUM=$QUORUM"
+
+marathon:
+  image: mesosphere/marathon
+  command: --master "$MESOS_ZK" --zk "$MARATHON_ZK"
+  restart: always
+  net: host
+  ports:
+   - "$HOST_IP:8080:8080"
+EOF
+	echo "docker-compose.yml saved."
+
+	# Prepare zookeeper config and data
+	mkdir -p zookeeper/conf
+	mkdir -p zookeeper/data
+
+	echo $MYID > zookeeper/data/myid
+
+	cat << EOF > zookeeper/conf/zoo.cfg
+tickTime=2000
+dataDir=/tmp/zookeeper/
+clientPort=2181
+initLimit=5
+syncLimit=2
+EOF
+	INDEX=1
+	for SERVER in $MASTERS; do
+		echo "server.$INDEX=$SERVER:2888:3888" >> zookeeper/conf/zoo.cfg
+		INDEX=$((INDEX + 1))
+	done
+	echo "zookeeper ready."
+}
+
+if [ "_$1" = "_master" ]; then
+	mesos_master
+else
+	echo "usage: $0 <master|slave>"
+fi
+

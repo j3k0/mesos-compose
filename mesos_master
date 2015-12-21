@@ -1,5 +1,0 @@
-#!/bin/sh
-set -e
-. "./config" || true
-. "`dirname $0`/functions"
-mesos_master "$@"
