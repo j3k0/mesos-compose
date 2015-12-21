@@ -54,7 +54,6 @@ function mesos_master() {
 zookeeper:
   image: $IMAGE_ZOOKEEPER
   restart: always
-  net: host
   ports:
    - "$HOST_IP:2181:2181"
    - "$HOST_IP:2888:2888"
@@ -67,17 +66,19 @@ mesosmaster:
   image: $IMAGE_MESOS_MASTER
   restart: always
   net: host
-  ports:
-   - "$HOST_IP:5050:5050"
+  # ports:
+  #  - "$HOST_IP:5050:5050"
   environment:
+   - "MESOS_HOSTNAME=$HOST_IP"
+   - "MESOS_IP=$HOST_IP"
    - "MESOS_ZK=$MESOS_ZK"
    - "MESOS_QUORUM=$QUORUM"
 
 marathon:
   image: $IMAGE_MARATHON
   command: --master "$MESOS_ZK" --zk "$MARATHON_ZK"
+  # if net: host, --http_address "$HOST_IP"
   restart: always
-  net: host
   ports:
    - "$HOST_IP:8080:8080"
 EOF
@@ -100,6 +101,8 @@ clientPort=2181
 initLimit=5
 syncLimit=2
 EOF
+    #clientPortAddress=$HOST_IP
+
 	INDEX=1
 	for SERVER in $MASTERS; do
 		echo "server.$INDEX=$SERVER:2888:3888" >> zookeeper/conf/zoo.cfg
