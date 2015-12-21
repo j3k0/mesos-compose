@@ -2,6 +2,10 @@
 test -f config && . "./config"
 set -e
 
+IMAGE_ZOOKEEPER="jplock/zookeeper:3.4.7"
+IMAGE_MESOS_MASTER="mesosphere/mesos-master:0.26.0-0.2.145.ubuntu1404"
+IMAGE_MARATHON="mesosphere/marathon"
+
 function mesos_master() {
 
 	if [ "_$INTERFACE" = "_" ]; then echo "missing env: INTERFACE"; exit 1; fi
@@ -48,7 +52,7 @@ function mesos_master() {
 
 	cat << EOF | envsubst > docker-compose.yml
 zookeeper:
-  image: jplock/zookeeper:3.4.7
+  image: $IMAGE_ZOOKEEPER
   restart: always
   net: host
   ports:
@@ -60,7 +64,7 @@ zookeeper:
    - ./zookeeper/data:/tmp/zookeeper
 
 mesosmaster:
-  image: mesosphere/mesos-master:0.26.0-0.2.145.ubuntu1404
+  image: $IMAGE_MESOS_MASTER
   restart: always
   net: host
   ports:
@@ -70,7 +74,7 @@ mesosmaster:
    - "MESOS_QUORUM=$QUORUM"
 
 marathon:
-  image: mesosphere/marathon
+  image: $IMAGE_MARATHON
   command: --master "$MESOS_ZK" --zk "$MARATHON_ZK"
   restart: always
   net: host
@@ -84,6 +88,10 @@ EOF
 	mkdir -p zookeeper/data
 
 	echo $MYID > zookeeper/data/myid
+
+    # Retrieve some conf from zookeeper image (configuration.xsl, log4j.properties)
+    # because it'll be inaccessible after we mount `conf` as a volume.
+	docker run --rm -v $(pwd)/zookeeper/conf:/conf --entrypoint=cp $IMAGE_ZOOKEEPER conf/configuration.xsl conf/log4j.properties /conf/
 
 	cat << EOF > zookeeper/conf/zoo.cfg
 tickTime=2000
