@@ -1,5 +1,9 @@
 function mesos_master() {
 
+    if [ "_$INTERFACE" = "_" ]; then echo "missing env: INTERFACE"; exit 1; fi
+    if [ "_$MASTERS" = "_" ]; then echo "missing env: MASTERS"; exit 1; fi
+    if [ "_$QUORUM" = "_" ]; then echo "missing env: QUORUM"; exit 1; fi
+
 	# Create the list of zookeeper host:port configs
 	for i in $MASTERS; do
 		if [ "_${ZK}" != "_" ]; then
