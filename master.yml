@@ -1,0 +1,33 @@
+zookeeper:
+  image: jplock/zookeeper:3.4.7
+  restart: always
+  net: host
+  ports:
+   - "$HOST_IP:2181:2181"
+   - "$HOST_IP:2888:2888"
+   - "$HOST_IP:3888:3888"
+
+zookeeperdata:
+  image: busybox
+  volumes:
+   - /opt/zookeeper/conf
+   - /tmp/zookeeper
+
+mesosmaster:
+  image: mesosphere/mesos-master:0.26.0-0.2.145.ubuntu1404
+  restart: always
+  net: host
+  ports:
+   - "$HOST_IP:5050:5050"
+  environment:
+   - "MESOS_ZK=$MESOS_ZK"
+   - "MESOS_QUORUM=$QUORUM"
+
+marathon:
+  image: mesosphere/marathon
+  command: --master "$MESOS_ZK" --zk "$MARATHON_ZK"
+  restart: always
+  net: host
+  ports:
+   - "$HOST_IP:8080:8080"
+
