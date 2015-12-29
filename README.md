@@ -43,9 +43,14 @@ Stop the containers, remove, ...
 
 *(See docker-compose own documentation for more commands).*
 
-## Note for larger clusters
+## About zookeeper's node IDs
 
-The zookeeper ID is set using the IP address' last number. (ex: for `192.168.0.144`, ID is `144`). It's fine if your cluster is small and using a `255.255.255.0`-type netmask, for bigger clusters you can export the `MYID` env to set the zookeeper ID.
+The zookeeper ID is set using the IP address' last number. (ex: for `192.168.0.3`, ID is `3`). This will work fine if:
+
+ - mesos masters run on the same `255.255.255.0` subnet.
+ - mesos masters use the first IPs in the range, i.e. `x.x.x.1`, `x.x.x.2`, `x.x.x.3`, ...
+
+If that's not the case, you can export the `MYID` env to set the zookeeper ID.
 
 ## Links
 
