@@ -4,9 +4,10 @@ set -e
 
 IMAGE_ZOOKEEPER="jplock/zookeeper:3.4.7"
 IMAGE_MESOS_MASTER="mesosphere/mesos-master:0.26.0-0.2.145.ubuntu1404"
+IMAGE_MESOS_SLAVE="mesosphere/mesos-slave:0.26.0-0.2.145.ubuntu1404"
 IMAGE_MARATHON="mesosphere/marathon"
 
-function mesos_master() {
+function mesos_prepare_env() {
 
 	if [ "_$INTERFACE" = "_" ]; then echo "missing env: INTERFACE"; exit 1; fi
 	if [ "_$MASTERS" = "_" ]; then echo "missing env: MASTERS"; exit 1; fi
@@ -49,6 +50,35 @@ function mesos_master() {
 	echo "MESOS_ZK=$MESOS_ZK"
 	echo "MARATHON_ZK=$MARATHON_ZK"
 	echo "MYID=$MYID"
+
+}
+
+function mesos_slave() {
+
+    mesos_prepare_env
+
+	cat << EOF | envsubst > docker-compose.yml
+mesosslave:
+  image: $IMAGE_MESOS_SLAVE
+  restart: always
+  net: host
+  volumes:
+   - /var/run/docker.sock:/var/run/docker.sock
+   - /usr/bin/docker:/usr/bin/docker
+  privileged: true
+  ports:
+   - "$HOST_IP:5051:5051"
+  environment:
+   - "MESOS_HOSTNAME=$HOST_IP"
+   - "MESOS_IP=$HOST_IP"
+   - "MESOS_MASTER=$MESOS_ZK"
+EOF
+	echo "docker-compose.yml saved."
+}
+
+function mesos_master() {
+
+    mesos_prepare_env
 
 	cat << EOF | envsubst > docker-compose.yml
 zookeeper:
@@ -118,6 +148,8 @@ EOF
 
 if [ "_$1" = "_master" ]; then
 	mesos_master
+elif [ "_$1" = "_slave" ]; then
+	mesos_slave
 else
 	echo "usage: $0 <master|slave>"
 fi
