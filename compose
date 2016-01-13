@@ -2,7 +2,7 @@
 test -f config && . "./config"
 set -e
 
-IMAGE_ZOOKEEPER="jplock/zookeeper:3.4.7"
+IMAGE_ZOOKEEPER="jplock/zookeeper:3.4.6"
 IMAGE_MESOS_MASTER="mesosphere/mesos-master:0.26.0-0.2.145.ubuntu1404"
 IMAGE_MESOS_SLAVE="mesosphere/mesos-slave:0.26.0-0.2.145.ubuntu1404"
 IMAGE_MARATHON="mesosphere/marathon"
