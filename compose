@@ -71,6 +71,10 @@ function mesos_slave() {
         APPARMOR_VOLUME1="   - /usr/lib/x86_64-linux-gnu/libapparmor.so.1.1.0:/usr/lib/x86_64-linux-gnu/libapparmor.so.1.1.0"
     fi
 
+	cat << EOF | envsubst > ip
+MESOS_IP=$MESOS_IP
+HAPROXY_HOST=$MESOS_IP
+EOF
 	cat << EOF | envsubst > docker-compose.yml
 mesosslave:
   image: $IMAGE_MESOS_SLAVE
@@ -81,6 +85,7 @@ mesosslave:
   restart: always
   net: host
   volumes:
+   - ./ip:/ip
    - /var/run/docker.sock:/var/run/docker.sock
    - /usr/bin/docker:/usr/bin/docker
 $APPARMOR_VOLUME0
