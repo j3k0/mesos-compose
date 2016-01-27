@@ -22,13 +22,17 @@ function mesos_prepare_env() {
 	done
 
 	# Find the public IP for the selected network interface
-	HOST_IP=`ifconfig $INTERFACE | grep "inet addr" | awk -F: '{print $2}' | awk '{print $1}'`
-	if [ "_$HOST_IP" = "_" ]; then
-		HOST_IP=`ifconfig $INTERFACE | grep "inet " | awk '{print $2}'`
+	MESOS_IP=`ifconfig $INTERFACE | grep "inet addr" | awk -F: '{print $2}' | awk '{print $1}'`
+	if [ "_$MESOS_IP" = "_" ]; then
+		MESOS_IP=`ifconfig $INTERFACE | grep "inet " | awk '{print $2}'`
 	fi
 
 	if [ "_$MYID" = "_" ]; then
-		MYID="`echo $HOST_IP|cut -d. -f4`"
+		MYID="`echo $MESOS_IP|cut -d. -f4`"
+	fi
+
+	if [ "_$MESOS_HOSTNAME" = "_" ]; then
+		MESOS_HOSTNAME=$MESOS_IP
 	fi
 
 	# Build zookeeper urls for mesos and marathon
@@ -38,7 +42,8 @@ function mesos_prepare_env() {
 	export INTERFACE
 	export MASTERS
 	export QUORUM
-	export HOST_IP
+	export MESOS_HOSTNAME
+	export MESOS_IP
 	export MESOS_ZK
 	export MARATHON_ZK
 	export MYID
@@ -46,7 +51,8 @@ function mesos_prepare_env() {
 	echo "INTERFACE=$INTERFACE"
 	echo "QUORUM=$QUORUM"
 	echo "MASTERS=$MASTERS"
-	echo "HOST_IP=$HOST_IP"
+	echo "MESOS_HOSTNAME=$MESOS_HOSTNAME"
+	echo "MESOS_IP=$MESOS_IP"
 	echo "MESOS_ZK=$MESOS_ZK"
 	echo "MARATHON_ZK=$MARATHON_ZK"
 	echo "MYID=$MYID"
@@ -67,10 +73,10 @@ mesosslave:
    - /usr/bin/docker:/usr/bin/docker
   privileged: true
   ports:
-   - "$HOST_IP:5051:5051"
+   - "$MESOS_IP:5051:5051"
   environment:
-   - "MESOS_HOSTNAME=$HOST_IP"
-   - "MESOS_IP=$HOST_IP"
+   - "MESOS_HOSTNAME=$MESOS_HOSTNAME"
+   - "MESOS_IP=$MESOS_IP"
    - "MESOS_MASTER=$MESOS_ZK"
 EOF
 	echo "docker-compose.yml saved."
@@ -86,9 +92,9 @@ zookeeper:
   restart: always
   net: host
   # ports:
-  #  - "$HOST_IP:2181:2181"
-  #  - "$HOST_IP:2888:2888"
-  #  - "$HOST_IP:3888:3888"
+  #  - "$MESOS_IP:2181:2181"
+  #  - "$MESOS_IP:2888:2888"
+  #  - "$MESOS_IP:3888:3888"
   volumes:
    - ./zookeeper/conf:/opt/zookeeper/conf
    - ./zookeeper/data:/tmp/zookeeper
@@ -98,10 +104,10 @@ mesosmaster:
   restart: always
   net: host
   # ports:
-  #  - "$HOST_IP:5050:5050"
+  #  - "$MESOS_IP:5050:5050"
   environment:
-   - "MESOS_HOSTNAME=$HOST_IP"
-   - "MESOS_IP=$HOST_IP"
+   - "MESOS_HOSTNAME=$MESOS_HOSTNAME"
+   - "MESOS_IP=$MESOS_IP"
    - "MESOS_ZK=$MESOS_ZK"
    - "MESOS_QUORUM=$QUORUM"
 
@@ -110,12 +116,12 @@ marathon:
   restart: always
   net: host
   # ports:
-  #  - "$HOST_IP:8080:8080"
+  #  - "$MESOS_IP:8080:8080"
   environment:
    - "MARATHON_MASTER=$MESOS_ZK"
    - "MARATHON_ZK=$MARATHON_ZK"
-   - "MARATHON_HTTP_ADDRESS=$HOST_IP"
-   - "MARATHON_HOSTNAME=$HOST_IP"
+   - "MARATHON_HTTP_ADDRESS=$MESOS_HOSTNAME"
+   - "MARATHON_HOSTNAME=$MESOS_HOSTNAME"
 EOF
 	echo "docker-compose.yml saved."
 
@@ -133,7 +139,7 @@ EOF
 tickTime=2000
 dataDir=/tmp/zookeeper/
 clientPort=2181
-clientPortAddress=$HOST_IP
+clientPortAddress=$MESOS_IP
 initLimit=5
 syncLimit=2
 EOF

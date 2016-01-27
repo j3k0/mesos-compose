@@ -52,6 +52,10 @@ The zookeeper ID is set using the IP address' last number. (ex: for `192.168.0.3
 
 If that's not the case, you can export the `MYID` env to set the zookeeper ID.
 
+## Optional config
+
+`MESOS_HOSTNAME` - Change the hostname used by mesos internally. IP address is used if not set.
+
 ## Links
 
  - [Docker Compose](https://docs.docker.com/compose/)
