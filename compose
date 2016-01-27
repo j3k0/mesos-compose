@@ -74,6 +74,10 @@ function mesos_slave() {
 	cat << EOF | envsubst > docker-compose.yml
 mesosslave:
   image: $IMAGE_MESOS_SLAVE
+  command: >
+    mesos-slave
+    --containerizers=docker,mesos
+    --executor_registration_timeout=5mins
   restart: always
   net: host
   volumes:
@@ -132,6 +136,7 @@ marathon:
    - "MARATHON_ZK=$MARATHON_ZK"
    - "MARATHON_HTTP_ADDRESS=$MESOS_HOSTNAME"
    - "MARATHON_HOSTNAME=$MESOS_HOSTNAME"
+   - "MARATHON_TASK_LAUNCH_TIMEOUT=300000"
 EOF
 	echo "docker-compose.yml saved."
 
