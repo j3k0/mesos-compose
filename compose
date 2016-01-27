@@ -63,6 +63,14 @@ function mesos_slave() {
 
     mesos_prepare_env
 
+    # Quick fix for docker-client from Ubuntu 14.04 host to run.
+    if test -e /usr/lib/x86_64-linux-gnu/libapparmor.so.1; then
+        APPARMOR_VOLUME0="   - /usr/lib/x86_64-linux-gnu/libapparmor.so.1"
+    fi
+    if test -e /usr/lib/x86_64-linux-gnu/libapparmor.so.1.1.0; then
+        APPARMOR_VOLUME1="   - /usr/lib/x86_64-linux-gnu/libapparmor.so.1.1.0"
+    fi
+
 	cat << EOF | envsubst > docker-compose.yml
 mesosslave:
   image: $IMAGE_MESOS_SLAVE
@@ -71,6 +79,8 @@ mesosslave:
   volumes:
    - /var/run/docker.sock:/var/run/docker.sock
    - /usr/bin/docker:/usr/bin/docker
+$APPARMOR_VOLUME0
+$APPARMOR_VOLUME1
   privileged: true
   ports:
    - "$MESOS_IP:5051:5051"
