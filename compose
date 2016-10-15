@@ -3,8 +3,8 @@ test -f config && . "./config"
 set -e
 
 IMAGE_ZOOKEEPER="jplock/zookeeper:3.4.9"
-IMAGE_MESOS_MASTER="mesosphere/mesos-master:0.27.2-2.0.15.ubuntu1404"
-IMAGE_MESOS_SLAVE="mesosphere/mesos-slave:0.27.2-2.0.15.ubuntu1404"
+IMAGE_MESOS_MASTER="mesosphere/mesos-master:0.28.2-2.0.27.ubuntu1404"
+IMAGE_MESOS_SLAVE="mesosphere/mesos-slave:0.28.2-2.0.27.ubuntu1404"
 IMAGE_MARATHON="mesosphere/marathon"
 
 function mesos_prepare_env() {
