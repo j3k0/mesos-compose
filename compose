@@ -70,6 +70,9 @@ function mesos_slave() {
     if test -e /usr/lib/x86_64-linux-gnu/libapparmor.so.1.1.0; then
         APPARMOR_VOLUME1="   - /usr/lib/x86_64-linux-gnu/libapparmor.so.1.1.0:/usr/lib/x86_64-linux-gnu/libapparmor.so.1.1.0"
     fi
+    if test -e /usr/lib/x86_64-linux-gnu/libltdl.so.7; then
+        LTDL_VOLUME0="   - /usr/lib/x86_64-linux-gnu/libltdl.so.7:/usr/lib/x86_64-linux-gnu/libltdl.so.7"
+    fi
 
 	cat << EOF | envsubst > ip
 MESOS_IP=$MESOS_IP
@@ -90,6 +93,7 @@ mesosslave:
    - /usr/bin/docker:/usr/bin/docker
 $APPARMOR_VOLUME0
 $APPARMOR_VOLUME1
+$LTDL_VOLUME0
   privileged: true
   ports:
    - "$MESOS_IP:5051:5051"
