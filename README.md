@@ -54,7 +54,8 @@ If that's not the case, you can export the `MYID` env to set the zookeeper ID.
 
 ## Optional config
 
-`MESOS_HOSTNAME` - Change the hostname used by mesos internally. IP address is used if not set.
+ - `MESOS_HOSTNAME` - Change the hostname used by mesos internally. IP address is used if not set.
+ - `RESTART_POLICY` - Set docker containers [restart policy](https://docs.docker.com/engine/reference/run/#restart-policies---restart)
 
 ## Links
 
