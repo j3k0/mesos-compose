@@ -13,6 +13,19 @@ function mesos_prepare_env() {
 	if [ "_$MASTERS" = "_" ]; then echo "missing env: MASTERS"; exit 1; fi
 	if [ "_$QUORUM" = "_" ]; then echo "missing env: QUORUM"; exit 1; fi
 
+    # Docker supports the following restart policies:
+    # - no
+    #         Do not automatically restart the container when it exits. This is the default.
+    # - on-failure[:max-retries]
+    #         Restart only if the container exits with a non-zero exit status. Optionally, limit the number of restart retries the Docker daemon attempts.
+    # - always
+    #         Always restart the container regardless of the exit status. When you specify always, the Docker daemon will try to restart the container indefinitely. The container will also always start on daemon startup, regardless of the current state of the container.
+    # - unless-stopped
+    #         Always restart the container regardless of the exit status, but do not start it on daemon startup if the container has been put to a stopped state before.
+    if [ "_$RESTART_POLICY" = "_" ]; then
+        RESTART_POLICY=no
+    fi
+
 	# Create the list of zookeeper host:port configs
 	for i in $MASTERS; do
 		if [ "_${ZK}" != "_" ]; then
@@ -47,6 +60,7 @@ function mesos_prepare_env() {
 	export MESOS_ZK
 	export MARATHON_ZK
 	export MYID
+    export RESTART_POLICY
 
 	echo "INTERFACE=$INTERFACE"
 	echo "QUORUM=$QUORUM"
@@ -85,7 +99,6 @@ mesosslave:
     mesos-slave
     --containerizers=docker,mesos
     --executor_registration_timeout=5mins
-  restart: always
   net: host
   volumes:
    - ./ip:/ip
@@ -101,6 +114,7 @@ $LTDL_VOLUME0
    - "MESOS_HOSTNAME=$MESOS_HOSTNAME"
    - "MESOS_IP=$MESOS_IP"
    - "MESOS_MASTER=$MESOS_ZK"
+  restart: $RESTART_POLICY
 EOF
 	echo "docker-compose.yml saved."
 }
@@ -112,7 +126,6 @@ function mesos_master() {
 	cat << EOF | envsubst > docker-compose.yml
 zookeeper:
   image: $IMAGE_ZOOKEEPER
-  restart: always
   net: host
   # ports:
   #  - "$MESOS_IP:2181:2181"
@@ -121,10 +134,10 @@ zookeeper:
   volumes:
    - ./zookeeper/conf:/opt/zookeeper/conf
    - ./zookeeper/data:/tmp/zookeeper
+  restart: $RESTART_POLICY
 
 mesosmaster:
   image: $IMAGE_MESOS_MASTER
-  restart: always
   net: host
   # ports:
   #  - "$MESOS_IP:5050:5050"
@@ -133,10 +146,10 @@ mesosmaster:
    - "MESOS_IP=$MESOS_IP"
    - "MESOS_ZK=$MESOS_ZK"
    - "MESOS_QUORUM=$QUORUM"
+  restart: $RESTART_POLICY
 
 marathon:
   image: $IMAGE_MARATHON
-  restart: always
   net: host
   # ports:
   #  - "$MESOS_IP:8080:8080"
@@ -146,6 +159,7 @@ marathon:
    - "MARATHON_HTTP_ADDRESS=$MESOS_HOSTNAME"
    - "MARATHON_HOSTNAME=$MESOS_HOSTNAME"
    - "MARATHON_TASK_LAUNCH_TIMEOUT=300000"
+  restart: $RESTART_POLICY
 EOF
 	echo "docker-compose.yml saved."
 
