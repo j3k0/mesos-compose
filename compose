@@ -114,7 +114,7 @@ $LTDL_VOLUME0
    - "MESOS_HOSTNAME=$MESOS_HOSTNAME"
    - "MESOS_IP=$MESOS_IP"
    - "MESOS_MASTER=$MESOS_ZK"
-  restart: $RESTART_POLICY
+  restart: "$RESTART_POLICY"
 EOF
 	echo "docker-compose.yml saved."
 }
@@ -134,7 +134,7 @@ zookeeper:
   volumes:
    - ./zookeeper/conf:/opt/zookeeper/conf
    - ./zookeeper/data:/tmp/zookeeper
-  restart: $RESTART_POLICY
+  restart: "$RESTART_POLICY"
 
 mesosmaster:
   image: $IMAGE_MESOS_MASTER
@@ -146,7 +146,7 @@ mesosmaster:
    - "MESOS_IP=$MESOS_IP"
    - "MESOS_ZK=$MESOS_ZK"
    - "MESOS_QUORUM=$QUORUM"
-  restart: $RESTART_POLICY
+  restart: "$RESTART_POLICY"
 
 marathon:
   image: $IMAGE_MARATHON
@@ -159,7 +159,7 @@ marathon:
    - "MARATHON_HTTP_ADDRESS=$MESOS_HOSTNAME"
    - "MARATHON_HOSTNAME=$MESOS_HOSTNAME"
    - "MARATHON_TASK_LAUNCH_TIMEOUT=300000"
-  restart: $RESTART_POLICY
+  restart: "$RESTART_POLICY"
 EOF
 	echo "docker-compose.yml saved."
 
