@@ -388,6 +388,12 @@ EOF
     # Cleanup
     rm -f $TMP_CONFIG $TMP_SCRIPT_PY
     echo "done"
+
+cat << EOF > stop
+    #!/bin/bash
+    docker-compose kill -s SIGUSR1 mesosslave
+EOF
+    chmod +x stop
 }
 
 if [ "_$1" = "_master" ]; then
