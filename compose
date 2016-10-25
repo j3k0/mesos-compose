@@ -381,7 +381,7 @@ EOF
 
     echo -n "Generating resources.json ... "
     MNT=`test -e /mnt && echo /mnt || (mkdir -p mnt && echo mnt)`
-    docker run --rm -it -v $MNT:/mnt -e "MESOS_WORK_DIR=`pwd`" -v "`pwd`:`pwd`" -w "`pwd`" python:3-alpine python $TMP_SCRIPT_PY $TMP_CONFIG
+    docker run --rm -v $MNT:/mnt -e "MESOS_WORK_DIR=`pwd`" -v "`pwd`:`pwd`" -w "`pwd`" python:3-alpine python $TMP_SCRIPT_PY $TMP_CONFIG
     . $TMP_CONFIG
     echo $MESOS_RESOURCES | json_pp > resources.json
 
