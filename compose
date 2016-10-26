@@ -238,7 +238,7 @@ JSON_DISK_TEMPLATE = Template('''
 }
 ''')
 
-MOUNT_PATTERN = re.compile('on\s+(/mnt/local-10.\d+)\s+', re.M | re.I)
+MOUNT_PATTERN = re.compile('on\s+(/mnt/local-\d+.\d+)\s+', re.M | re.I)
 
 # Conversion factor for Bytes -> MB calculation
 MB = float(1 << 20)
