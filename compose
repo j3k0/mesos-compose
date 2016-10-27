@@ -12,6 +12,8 @@ function mesos_prepare_env() {
 	if [ "_$MASTERS" = "_" ]; then echo "missing env: MASTERS"; exit 1; fi
 	if [ "_$QUORUM" = "_" ]; then echo "missing env: QUORUM"; exit 1; fi
 
+    mkdir -p work_dir log_dir
+
     # Docker supports the following restart policies:
     # - no
     #         Do not automatically restart the container when it exits. This is the default.
@@ -100,11 +102,13 @@ mesosslave:
     --containerizers=docker,mesos
     --executor_registration_timeout=5mins
     --work_dir=/work_dir
+    --log_dir=/log_dir
     --resources=file:///resources.json
   net: host
   volumes:
    - /mnt:/mnt
    - ./work_dir:/work_dir
+   - ./log_dir:/log_dir
    - ./resources.json:/resources.json
    - ./ip:/ip
    - /var/run/docker.sock:/var/run/docker.sock
@@ -142,6 +146,11 @@ mesosmaster:
   command: >
     mesos-master
     --registry=in_memory
+    --work_dir=/work_dir
+    --log_dir=/log_dir
+  volumes:
+    - ./work_dir:/work_dir
+    - ./log_dir:/log_dir
   net: host
   environment:
    - "MESOS_HOSTNAME=$MESOS_HOSTNAME"
@@ -155,7 +164,6 @@ marathon:
   net: host
   command: >
     --mesos_role marathon
-    --mesos_authentication_principal marathon
   environment:
    - "MARATHON_MASTER=$MESOS_ZK"
    - "MARATHON_ZK=$MARATHON_ZK"
