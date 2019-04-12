@@ -106,6 +106,7 @@ mesosslave:
     --resources=file:///resources.json
     --no-systemd_enable_support
   net: host
+  pid: host
   volumes:
    - /mnt:/mnt
    - ./work_dir:/work_dir
