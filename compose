@@ -4,7 +4,7 @@ set -e
 
 IMAGE_ZOOKEEPER="jplock/zookeeper:3.4.13" # latest: 3.5.5
 IMAGE_MESOS="mesosphere/mesos:1.6.2" # latest: 1.7.1
-IMAGE_MARATHON="mesosphere/marathon:v1.8.244" # then v1.9.140, v1.10.26, v1.11.26
+IMAGE_MARATHON="mesosphere/marathon:v1.9.140" # then v1.10.26, v1.11.26
 
 function mesos_prepare_env() {
 
